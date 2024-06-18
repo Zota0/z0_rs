@@ -15,12 +15,13 @@ impl Path {
     }
 }
 
+
 fn main() {
+
     let main_path_name = "scripts/main.z0".to_string();
     let main_path = Path::new(main_path_name, None);
     let main_file = ReadFile(main_path);
     let mut contents :String = String::new();
-    let all_functions :Vec<String> = Vec::new();
 
     match main_file {
         Err(_) => return,
@@ -34,9 +35,6 @@ fn main() {
     for command in commands {
         ParseCommands(command);
     }
-
-    println!("All Functions: {:#?}", all_functions);
-
 }
 
 fn WriteCommands(contents: String) -> Vec<String> {
@@ -54,7 +52,7 @@ fn WriteCommands(contents: String) -> Vec<String> {
         last_command.push_str(" ");
         last_command.push_str(&current_command);
 
-        // Update brace level
+        
         if current_command.contains('{') {
             brace_level += current_command.matches('{').count() as u32;
         }
@@ -62,14 +60,14 @@ fn WriteCommands(contents: String) -> Vec<String> {
             brace_level -= current_command.matches('}').count() as u32;
         }
 
-        // Split if at brace level 0 and line ends with ';' or '}' 
+        
         if brace_level == 0 && (current_command.ends_with(';') || current_command.ends_with('}')) {
             commands.push(last_command.trim().to_string());
             last_command = String::new();
         }
     }
 
-    // Handle the last command
+    
     if !last_command.is_empty() {
         commands.push(last_command.trim().to_string());
     }
@@ -83,7 +81,7 @@ fn ParseCommands(command: String) {
     let mut command = command.trim();
 
     if command.starts_with("func") {
-        let mut command = command.replace("func", "");
+        let command = command.replace("func", "");
         let mut func_name :Vec<String> = Vec::new();
 
         let c_ch :Chars = command.chars();
@@ -98,7 +96,25 @@ fn ParseCommands(command: String) {
         func_name = func_name.join("").split(" ").map(|x| x.to_string()).collect();
         let func_name = func_name.join("").replace(")", "").replace("(", "");
 
-        println!("Function name: {}", func_name);
+        return;
+    }
+
+    if command.starts_with("??") {
+        let command = command.replace("??", "");
+        let mut comparison :Vec<String> = Vec::new();
+
+        let c_ch :Chars = command.chars();
+        for c_o in c_ch {
+            if c_o == '{' {
+                break;
+            } else {
+                comparison.push(c_o.to_string());
+            }
+        }
+
+        comparison = comparison.join("").split(" ").map(|x| x.to_string()).collect();
+        let comparison = comparison.join("").replace(")", "").replace("(", "");
+
         return;
     }
 }
