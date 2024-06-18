@@ -2,6 +2,7 @@
 #![allow(unused_parens)]
 
 use std::{io::Read, fs::File};
+use core::str::Chars;
 
 struct Path {
     pathname: String,
@@ -19,6 +20,7 @@ fn main() {
     let main_path = Path::new(main_path_name, None);
     let main_file = ReadFile(main_path);
     let mut contents :String = String::new();
+    let all_functions :Vec<String> = Vec::new();
 
     match main_file {
         Err(_) => return,
@@ -29,42 +31,76 @@ fn main() {
     
     let commands :Vec<String> = WriteCommands(contents);
 
-    ParseCommand(commands);
+    for command in commands {
+        ParseCommands(command);
+    }
+
+    println!("All Functions: {:#?}", all_functions);
 
 }
 
 fn WriteCommands(contents: String) -> Vec<String> {
-
-    let mut commands :Vec<String> = Vec::new();
-    let mut last_command :String = String::new();
+    let mut commands: Vec<String> = Vec::new();
+    let mut last_command: String = String::new();
+    let mut brace_level: u32 = 0;
 
     for line in contents.lines() {
-        
-        let mut current_command :String = line.trim().to_string();
+        let current_command: String = line.trim().to_string();
 
         if current_command.is_empty() {
             continue;
         }
-        
-        if current_command.ends_with(";") {
-            current_command = current_command.replace(";", "").to_string();
-        } else {
-            last_command += &current_command.to_string(); 
+
+        last_command.push_str(" ");
+        last_command.push_str(&current_command);
+
+        // Update brace level
+        if current_command.contains('{') {
+            brace_level += current_command.matches('{').count() as u32;
+        }
+        if current_command.contains('}') {
+            brace_level -= current_command.matches('}').count() as u32;
         }
 
-        if last_command.ends_with(";") || last_command.ends_with("}") {
-            commands.push(last_command.clone());
+        // Split if at brace level 0 and line ends with ';' or '}' 
+        if brace_level == 0 && (current_command.ends_with(';') || current_command.ends_with('}')) {
+            commands.push(last_command.trim().to_string());
             last_command = String::new();
-        } else {
-            commands.push(current_command.clone());
         }
     }
 
+    // Handle the last command
+    if !last_command.is_empty() {
+        commands.push(last_command.trim().to_string());
+    }
+
+    println!("{:#?}", commands);
     return commands;
 }
 
-fn ParseCommand(command: Vec<String>) {
-    println!("Command: {:#?}", command);
+fn ParseCommands(command: String) {
+
+    let mut command = command.trim();
+
+    if command.starts_with("func") {
+        let mut command = command.replace("func", "");
+        let mut func_name :Vec<String> = Vec::new();
+
+        let c_ch :Chars = command.chars();
+        for f_n in c_ch {
+            if f_n == '{' {
+                break;
+            } else {
+                func_name.push(f_n.to_string());
+            }
+        }
+
+        func_name = func_name.join("").split(" ").map(|x| x.to_string()).collect();
+        let func_name = func_name.join("").replace(")", "").replace("(", "");
+
+        println!("Function name: {}", func_name);
+        return;
+    }
 }
 
 fn ReadFile(file: Path) -> Result<String, std::io::Error> {

@@ -1,5 +1,8 @@
 
 func main() {
-    "Hello World!"?
+    "Hello World!"?;
 }
 
+?? true {
+    "YES!"?
+}
